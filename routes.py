@@ -1,25 +1,3 @@
-# from flask import Blueprint, jsonify
-# from pymongo import MongoClient
-
-# # Create a Blueprint
-# webhook = Blueprint('Webhook', __name__, url_prefix='/webhook')
-
-# # Connect to MongoDB
-# client = MongoClient("mongodb://localhost:27017/")
-# db = client["github_actions"]
-# collection = db["events"]
-
-# # Create the API route
-# @webhook.route('/api/events', methods=["GET"])
-# def get_events():
-#     data = list(collection.find({}, {"_id": 0}))
-#     return jsonify(data), 200
-
-
-
-
-
-
 from flask import Blueprint, request, jsonify, abort
 from pymongo import MongoClient
 from datetime import datetime
@@ -51,7 +29,7 @@ def verify_signature(payload, signature):
     return hmac.compare_digest(expected_signature, signature)
 
 # Webhook listener
-@webhook.route("", methods=["POST"])  # This handles POST to /webhook
+@webhook.route("", methods=["POST"])  # Handles POST to /webhook
 def receive_webhook():
     raw_data = request.data
     signature = request.headers.get("X-Hub-Signature-256", "")
@@ -61,7 +39,13 @@ def receive_webhook():
         abort(403, "Invalid signature")
 
     data = request.get_json(force=True)
-    logging.info(f"📦 Received webhook data: {data}")
+    event = request.headers.get("X-GitHub-Event", "")
+
+    logging.info(f"📦 Received webhook event: {event} with data: {data}")
+
+    # Handle ping event (GitHub webhook test)
+    if event == "ping":
+        return jsonify({"msg": "pong"}), 200
 
     payload = {}
 
@@ -99,8 +83,3 @@ def receive_webhook():
 def get_events():
     data = list(collection.find({}, {"_id": 0}))
     return jsonify(data), 200
-
-
-
-
-
