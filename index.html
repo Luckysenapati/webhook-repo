@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GitHub Actions Viewer</title>
+</head>
+<body>
+  <h2>Latest GitHub Actions:</h2>
+  <ul id="output"></ul>
+
+  <script>
+    async function fetchData() {
+      const res = await fetch("http://localhost:5000/webhook/api/events");
+      const data = await res.json();
+      const list = document.getElementById("output");
+      list.innerHTML = "";
+
+      data.reverse().forEach(event => {
+        let text = "";
+        if (event.action === "PUSH") {
+          text = `${event.author} pushed to ${event.to_branch} on ${event.timestamp}`;
+        } else if (event.action === "PULL_REQUEST") {
+          text = `${event.author} submitted a pull request from ${event.from_branch} to ${event.to_branch} on ${event.timestamp}`;
+        } else if (event.action === "MERGE") {
+          text = `${event.author} merged branch ${event.from_branch} to ${event.to_branch} on ${event.timestamp}`;
+        }
+        const li = document.createElement("li");
+        li.innerText = text;
+        list.appendChild(li);
+      });
+    }
+
+    fetchData();
+    setInterval(fetchData, 15000);
+  </script>
+</body>
+</html>
